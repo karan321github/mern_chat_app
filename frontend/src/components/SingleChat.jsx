@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ChatState } from "../context/chatContext";
 import {
   Box,
@@ -88,7 +88,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     // eslint-disable-next-line
   }, []);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!selectedChat) {
       return;
     }
@@ -117,12 +117,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: "bottom",
       });
     }
-  };
+  } , [messages , selectedChat , toast , user.token]);
 
   useEffect(() => {
     fetchMessages();
     selectedChatCompare = selectedChat;
-  }, [selectedChat]);
+  }, [selectedChat , fetchMessages]);
 
   useEffect(() => {
     socket.on("message recieved", (newMessageRecieved) => {
