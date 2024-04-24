@@ -105,7 +105,7 @@ const MyChats = ({ fetchAgain }) => {
                       size="sm"
                       cursor="pointer"
                       name={user.name}
-                      src={chat.users.length > 0 ? chat.users[0].pic : ""}
+                      src={chat.users && chat.users.length > 0 ? chat.users[0].pic : ""}
                     />
 
                     <Text mx={2}>
