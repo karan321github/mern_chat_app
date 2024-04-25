@@ -11,6 +11,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
+import { ChatState } from "../context/chatContext.js";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -19,9 +20,9 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
-
+  const { setUser } = ChatState();
   const handleClick = () => setShow(!show);
-  
+
   const submitHandler = async () => {
     setLoading(true);
     if (!email || !password) {
@@ -42,7 +43,7 @@ export const Login = () => {
           "Content-type": "application/json",
         },
       };
-      const {data} = await axios.post(
+      const { data } = await axios.post(
         "/api/user/login",
         { email, password },
         config
@@ -55,27 +56,27 @@ export const Login = () => {
         position: "bottom",
         isClosable: true,
       });
+      setUser(data);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/chat");
     } catch (error) {
       toast({
-        status: "error",
+        title: "Error Occured!",
         description: error.response.data.message,
-        duration: "5000",
-        title: "Error occurred",
-        position: "bottom",
+        status: "error",
+        duration: 5000,
         isClosable: true,
+        position: "bottom",
       });
       setLoading(false);
     }
   };
   return (
-    <VStack spacing={"5px"}>
-      <FormControl id="Email" isRequired>
+    <VStack spacing={"10px"}>
+      <FormControl id="email" isRequired>
         <FormLabel>Email</FormLabel>
-        <Input 
-         
+        <Input
           placeholder="Enter your email"
           onChange={(e) => setEmail(e.target.value)}
           value={email}
@@ -84,7 +85,7 @@ export const Login = () => {
 
       <FormControl id="Password" isRequired>
         <FormLabel>Password</FormLabel>
-        <InputGroup>
+        <InputGroup size="md">
           <Input
             type={show ? "text" : "password"}
             placeholder="Enter your password"
@@ -122,7 +123,7 @@ export const Login = () => {
         style={{ marginTop: 15 }}
         onClick={() => {
           setEmail("guest@example.com");
-          setPassword("12345");
+          setPassword("123456");
         }}
       >
         Get user credentials

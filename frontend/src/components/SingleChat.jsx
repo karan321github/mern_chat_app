@@ -88,7 +88,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     // eslint-disable-next-line
   }, []);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = async () => {
     if (!selectedChat) {
       return;
     }
@@ -117,12 +117,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: "bottom",
       });
     }
-  } , [messages , selectedChat , toast , user.token]);
+  };
 
   useEffect(() => {
     fetchMessages();
     selectedChatCompare = selectedChat;
-  }, [selectedChat , fetchMessages]);
+  }, [selectedChat]);
 
   useEffect(() => {
     socket.on("message recieved", (newMessageRecieved) => {
@@ -260,7 +260,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           h="100%"
         >
           <Text color="gray" fontSize="" fontFamily="Poppins">
-          {/* <Image src="../assets/whatsapp.png" alt="whatsapp logo"/> */}
+            {/* <Image src="../assets/whatsapp.png" alt="whatsapp logo"/> */}
             Send and receive messages without keeping your phone online.
             <br></br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
