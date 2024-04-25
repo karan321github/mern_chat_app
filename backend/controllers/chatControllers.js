@@ -2,8 +2,6 @@ const expressAsyncHandler = require("express-async-handler");
 const Chat = require("../models/chatModel.js");
 const User = require("../models/userModel.js");
 
-
-
 const accessChats = expressAsyncHandler(async (req, res) => {
   const { userId } = req.body;
   if (!userId) {
@@ -52,10 +50,10 @@ const accessChats = expressAsyncHandler(async (req, res) => {
 const fetchChats = expressAsyncHandler(async (req, res) => {
   try {
     Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
-      .populate("users", "-passwords")
+      .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
-      .sort({ updateAt: -1 })
+      .sort({ updatedAt: -1 })
       .then(async (result) => {
         result = await User.populate(result, {
           path: "latestMessage.sender",
@@ -72,13 +70,14 @@ const fetchChats = expressAsyncHandler(async (req, res) => {
 const createGroupChats = expressAsyncHandler(async (req, res) => {
   if (!req.body.users || !req.body.name) {
     res.status(400).send({ message: "please fill all the details" });
+    return;
   }
 
   var users = JSON.parse(req.body.users);
   if (users.length < 2) {
-    return res
-      .status(400)
-      .send("More than two users are requires to form a group chat");
+    return res.status(400).send({
+      message: "More than two users are requires to form a group chat",
+    });
   }
 
   users.push(req.user);
@@ -97,8 +96,8 @@ const createGroupChats = expressAsyncHandler(async (req, res) => {
 
     res.status(200).json(fullGroupChat);
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+    console.error(error);
   }
 });
 

@@ -21,18 +21,20 @@ import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
 import "../components/style.css";
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "https://chat-app-iz0w.onrender.com";
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const { selectedChat, setSelectedChat, user } = ChatState();
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const toast = useToast();
+  
+  const { selectedChat, setSelectedChat, user ,notification, setNotification } = ChatState();
+
 
   const defaultOptions = {
     loop: true,
@@ -42,7 +44,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-  const { notification, setNotification } = ChatState();
+  
   const sendMessage = async (event) => {
     if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
