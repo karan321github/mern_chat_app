@@ -20,7 +20,7 @@ import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
 import "../components/style.css";
 
-const ENDPOINT = "http://localhost:5000"  //https://chat-app-iz0w.onrender.com";
+const ENDPOINT = "https://mern-chat-app-98vj.onrender.com."  //https://chat-app-iz0w.onrender.com";
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -89,52 +89,36 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
-    socket.on(
-      "messageReceived",
-      (newMessage) => {
-        if (newMessage.chatId === selectedChat._id) {
-          // Update messages
-          setMessages([...messages, newMessage]);
+    socket.on("connected", () => setSocketConnected(true));
+    socket.on("typing", () => setIsTyping(true));
+    socket.on("stop typing", () => setIsTyping(false));
 
-          // Update chat list in MyChats component
-          setChats((prevChats) => {
-            const updatedChats = prevChats.map((chat) => {
-              if (chat._id === selectedChat._id) {
-                return {
-                  ...chat,
-                  latestMessage: newMessage, // Update latest message for the selected chat
-                };
-              }
-              return chat;
-            });
+    // eslint-disable-next-line
+  }, []);
 
-            // Sort the chats based on the latest message timestamp
-            return updatedChats.sort((a, b) => {
-              const latestMessageA = a.latestMessage
-                ? new Date(a.latestMessage.timestamp)
-                : 0;
-              const latestMessageB = b.latestMessage
-                ? new Date(b.latestMessage.timestamp)
-                : 0;
-              return latestMessageB - latestMessageA;
-            });
-          });
+  useEffect(() => {
+    fetchMessages();
 
-          setFetchAgain(!fetchAgain); // Trigger re-fetch of chats in MyChats component
+    selectedChatCompare = selectedChat;
+    // eslint-disable-next-line
+  }, [selectedChat]);
+
+  useEffect(() => {
+    socket.on("message recieved", (newMessageRecieved) => {
+      if (
+        !selectedChatCompare || // if chat is not selected or doesn't match current chat
+        selectedChatCompare._id !== newMessageRecieved.chat._id
+      ) {
+        if (!notification.includes(newMessageRecieved)) {
+          setNotification([newMessageRecieved, ...notification]);
+          setFetchAgain(!fetchAgain);
         }
-        socket.on("connected", () => setSocketConnected(true));
-        socket.on("typing", () => setIsTyping(true));
-        socket.on("stop typing", () => setIsTyping(false));
+      } else {
+        setMessages([...messages, newMessageRecieved]);
+      }
+    });
+  });
 
-        // eslint-disable-next-line
-      },
-      []
-    );
-
-    return () => {
-      socket.off("messageReceived");
-    };
-  }, [selectedChat, user, messages, fetchAgain, setFetchAgain, setChats]);
 
   const fetchMessages = async () => {
     if (!selectedChat) {
