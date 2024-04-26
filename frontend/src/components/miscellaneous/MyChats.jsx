@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChatState } from "../../context/chatContext";
 import axios from "axios";
 import { Avatar, Box, Button, Stack, Text, useToast } from "@chakra-ui/react";
@@ -6,11 +6,15 @@ import { AddIcon } from "@chakra-ui/icons";
 import ChatLoading from "../ChatLoading";
 import { getSender } from "../../config/chatLogics";
 import GroupChatModal from "./GroupChatModal";
+import io from "socket.io-client";
 
+const ENDPOINT = "https://mern-chat-app-98vj.onrender.com";
 const MyChats = ({ fetchAgain }) => {
   const toast = useToast();
   const [loggedUser, setLoggedUser] = useState();
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
+
+  const socketRef = useRef(null);
 
   const fetchChats = useCallback(async () => {
     try {
@@ -38,6 +42,16 @@ const MyChats = ({ fetchAgain }) => {
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
+
+    socketRef.current = io(ENDPOINT);
+
+    socketRef.current.on("message recieved", (newMessage) => {
+      fetchChats();
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
   }, [fetchAgain, fetchChats]);
 
   // const compareTimestamps = (chat1, chat2) => {
