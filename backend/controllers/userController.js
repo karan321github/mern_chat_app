@@ -42,21 +42,25 @@ const registerUser = asyncHandler(async (req, res) => {
 const authUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  const validPassword = bcrypt.compareSync(password, user.password);
-  if (!validPassword) return next(errorHandler(404, "Wrong credentials"));
-
-  if (user) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      pic: user.pic,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(400);
-    throw new Error("Invalid email or password");
+  
+  if (!user) {
+    return res.status(401).json({ message: "User not found" });
   }
+
+  const validPassword = bcrypt.compareSync(password, user.password);
+
+  if (!validPassword) {
+    return res.status(401).json({ message: "Wrong email or password" });
+  }
+
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    isAdmin: user.isAdmin,
+    pic: user.pic,
+    token: generateToken(user._id),
+  });
 });
 
 const allUser = asyncHandler(async (req, res) => {

@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChatState } from "../context/chatContext";
 import {
   Box,
   FormControl,
   IconButton,
-  Image,
   Input,
   Spinner,
   Text,
@@ -21,7 +20,7 @@ import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
 import "../components/style.css";
 
-const ENDPOINT = "https://chat-app-iz0w.onrender.com";
+const ENDPOINT = "http://localhost:5000"  //https://chat-app-iz0w.onrender.com";
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -32,9 +31,16 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [istyping, setIsTyping] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const toast = useToast();
-  
-  const { selectedChat, setSelectedChat, user ,notification, setNotification } = ChatState();
 
+  const {
+    selectedChat,
+    setSelectedChat,
+    user,
+    notification,
+    setNotification,
+    chats,
+    setChats,
+  } = ChatState();
 
   const defaultOptions = {
     loop: true,
@@ -44,7 +50,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-  
+
   const sendMessage = async (event) => {
     if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
@@ -83,12 +89,52 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
-    socket.on("connected", () => setSocketConnected(true));
-    socket.on("typing", () => setIsTyping(true));
-    socket.on("stop typing", () => setIsTyping(false));
+    socket.on(
+      "messageReceived",
+      (newMessage) => {
+        if (newMessage.chatId === selectedChat._id) {
+          // Update messages
+          setMessages([...messages, newMessage]);
 
-    // eslint-disable-next-line
-  }, []);
+          // Update chat list in MyChats component
+          setChats((prevChats) => {
+            const updatedChats = prevChats.map((chat) => {
+              if (chat._id === selectedChat._id) {
+                return {
+                  ...chat,
+                  latestMessage: newMessage, // Update latest message for the selected chat
+                };
+              }
+              return chat;
+            });
+
+            // Sort the chats based on the latest message timestamp
+            return updatedChats.sort((a, b) => {
+              const latestMessageA = a.latestMessage
+                ? new Date(a.latestMessage.timestamp)
+                : 0;
+              const latestMessageB = b.latestMessage
+                ? new Date(b.latestMessage.timestamp)
+                : 0;
+              return latestMessageB - latestMessageA;
+            });
+          });
+
+          setFetchAgain(!fetchAgain); // Trigger re-fetch of chats in MyChats component
+        }
+        socket.on("connected", () => setSocketConnected(true));
+        socket.on("typing", () => setIsTyping(true));
+        socket.on("stop typing", () => setIsTyping(false));
+
+        // eslint-disable-next-line
+      },
+      []
+    );
+
+    return () => {
+      socket.off("messageReceived");
+    };
+  }, [selectedChat, user, messages, fetchAgain, setFetchAgain, setChats]);
 
   const fetchMessages = async () => {
     if (!selectedChat) {

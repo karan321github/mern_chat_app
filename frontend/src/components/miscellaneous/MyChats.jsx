@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ChatState } from "../../context/chatContext";
 import axios from "axios";
 import { Avatar, Box, Button, Stack, Text, useToast } from "@chakra-ui/react";
@@ -12,7 +12,7 @@ const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
 
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
       const config = {
         headers: {
@@ -21,7 +21,7 @@ const MyChats = ({ fetchAgain }) => {
       };
 
       const { data } = await axios.get("/api/chat", config);
-      console.log(data);
+      console.log("Fetched Chats:", data);
       setChats(data);
     } catch (error) {
       console.log(error.message);
@@ -33,12 +33,21 @@ const MyChats = ({ fetchAgain }) => {
         position: "top-left",
       });
     }
-  };
+  }, [setChats, toast, user.token]);
 
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
     fetchChats();
-  }, [fetchAgain]);
+  }, [fetchAgain, fetchChats]);
+
+  // const compareTimestamps = (chat1, chat2) => {
+  //   if (!chat1.latestMessage) return 1; // Place chats without messages at the bottom
+  //   if (!chat2.latestMessage) return -1;
+  //   return new Date(chat2.latestMessage.timestamp) - new Date(chat1.latestMessage.timestamp);
+  // };
+
+  // // Sort chats array based on latest message timestamp
+  // const sortedChats = chats ? [...chats].sort(compareTimestamps) : null;
 
   return (
     <Box
@@ -86,10 +95,12 @@ const MyChats = ({ fetchAgain }) => {
       >
         {chats ? (
           <Stack overflowY="scroll">
-            {chats.map((chat, index) => {
-              console.log("Chat index:", index, chat); // Add this line for debugging
+            {chats.map((chat) => {
+              // console.log("Chat index:", index, chat)
               return (
                 <Box
+                  display="flex"
+                  flexDirection="column"
                   onClick={() => setSelectedChat(chat)}
                   cursor="pointer"
                   bg={selectedChat === chat ? "#38B2AC" : "#E8E8E8"}
@@ -105,7 +116,11 @@ const MyChats = ({ fetchAgain }) => {
                       size="sm"
                       cursor="pointer"
                       name={user.name}
-                      src={chat.users && chat.users.length > 0 ? chat.users[0].pic : ""}
+                      src={
+                        chat.users && chat.users.length > 0
+                          ? chat.users[0].pic
+                          : ""
+                      }
                     />
 
                     <Text mx={2}>

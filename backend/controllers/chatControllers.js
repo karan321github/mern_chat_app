@@ -60,6 +60,7 @@ const fetchChats = expressAsyncHandler(async (req, res) => {
           select: "name pic email",
         });
         res.status(200).send(result);
+        // console.log(result)
       });
   } catch (error) {
     res.status(400);
